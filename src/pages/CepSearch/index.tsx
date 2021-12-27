@@ -2,17 +2,24 @@ import './styles.css';
 
 import ResultCard from 'components/ResultCard';
 import { useState } from 'react';
+import axios from 'axios';
 
 type FormData = {
   postcode: string;
-  test: string;
+}
+
+type Address = {
+  logradouro: string;
+  bairro: string;
+  localidade: string;
 }
 
 const CepSearch = () => {
 
+  const [address, setAddress] = useState<Address>();
+
   const [formData, setFormData] = useState<FormData>({
-    postcode: '',
-    test: ''
+    postcode: ''
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,7 +31,16 @@ const CepSearch = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(formData);
+    
+    axios.get(`https://viacep.com.br/ws/${formData.postcode}/json`)
+    .then((response) => {
+      setAddress(response.data);
+      console.log(response.data);
+    })
+    .catch((error) => {
+      setAddress(undefined);
+      console.log(error);
+    });
   }
 
 
@@ -42,26 +58,23 @@ const CepSearch = () => {
               placeholder="PostCode (Enter only number)"
               onChange={handleChange}
             />
-             <input
-              type="text"
-              name="test"
-              value={formData.test}
-              className="search-input"
-              placeholder="TEST"
-              onChange={handleChange}
-            />
             <button type="submit" className="btn btn-primary search-button">
               Search
             </button>
           </div>
         </form>
-
-        <ResultCard title="Address" description="Lalala" />
-        <ResultCard title="Number" description="234" />
-
+        {address &&
+          <>
+            <ResultCard title="Address" description={address.logradouro} />
+            <ResultCard title="Location" description={address.bairro} />
+            <ResultCard title="City" description={address.localidade} />
+          </>
+        }
       </div>
     </div>
   );
 };
 
 export default CepSearch;
+
+
